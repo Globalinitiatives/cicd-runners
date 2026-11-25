@@ -1,0 +1,65 @@
+
+services:
+  cicd:
+    image: cicd-environment:latest
+    container_name: cicd-environment
+    hostname: cicd-environment
+    restart: unless-stopped
+    init: true
+    tty: true
+    stdin_open: true
+    working_dir: /opt/cicd
+
+    environment:
+      DEBIAN_FRONTEND: noninteractive
+      DOCKER_GID: "${DOCKER_GID:-999}"
+
+    command: >
+      bash -lc '
+        if ! command -v docker >/dev/null 2>&1; then
+          apt-get update &&
+          apt-get install -y --no-install-recommends
+            ca-certificates
+            curl
+            git
+            jq
+            unzip
+            zip
+            tmux
+            nano
+            vim
+            sudo
+            openssh-client
+            build-essential
+            docker.io &&
+          rm -rf /var/lib/apt/lists/*;
+        fi;
+
+        if ! id cicd >/dev/null 2>&1; then
+          useradd -m -u 1000 -s /bin/bash cicd;
+        fi;
+
+        if ! awk -F: -v gid="$DOCKER_GID" '$3 == gid { found=1 } END { exit found ? 0 : 1 }' /etc/group; then
+          groupadd -g "$DOCKER_GID" docker-host;
+          DOCKER_GROUP="docker-host";
+        else
+          DOCKER_GROUP=$(awk -F: -v gid="$DOCKER_GID" '$3 == gid { print $1 }' /etc/group);
+        fi
+
+        usermod -aG "$DOCKER_GROUP" cicd;
+
+        mkdir -p /opt/cicd;
+        chown -R cicd:cicd /opt/cicd;
+
+        exec sleep infinity
+      '
+
+    group_add:
+      - "${DOCKER_GID:-999}"
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - cicd-data:/opt/cicd
+
+volumes:
+  cicd-data:
