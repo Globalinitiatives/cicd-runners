@@ -51,7 +51,7 @@ services:
         mkdir -p /opt/cicd;
         chown -R cicd:cicd /opt/cicd;
 
-        exec sleep infinity
+        exec /usr/bin/supervisord -n -c /opt/cicd/supervisord.conf
       '
 
     group_add:

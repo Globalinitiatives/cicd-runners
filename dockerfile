@@ -162,17 +162,17 @@ else
 fi
 
 log "Re-reading supervisor configurations..."
-supervisorctl reread
+supervisorctl -c /opt/cicd/supervisord.conf reread
 RC=$?
 if [[ $RC -ne 0 ]]; then
-    log "notice: supervisorctl reread exited ${RC}"
+    log "notice: supervisorctl -c /opt/cicd/supervisord.conf reread exited ${RC}"
 fi
 
 log "Updating supervisor state..."
-supervisorctl update
+supervisorctl -c /opt/cicd/supervisord.conf update
 RC=$?
 if [[ $RC -ne 0 ]]; then
-    log "notice: supervisorctl update exited ${RC}"
+    log "notice: supervisorctl -c /opt/cicd/supervisord.conf update exited ${RC}"
 fi
 
 if [[ -f "$CONFIG_FILE" ]]; then
