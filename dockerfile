@@ -63,7 +63,7 @@ RUN set -eu \
     fi \
     && usermod -aG "${DOCKER_GROUP}" cicd \
     && usermod -aG sudo cicd \
-    && echo "[dockerfile] Granting 'cicd' passwordless sudo..."; \
+    && echo "[dockerfile] Granting 'cicd' passwordless sudo..." \
     && echo "cicd ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/cicd \
     && chmod 0440 /etc/sudoers.d/cicd \
     && echo "[dockerfile] Done: user 'cicd' has passwordless sudo; socket group '${DOCKER_GROUP_NAME}' (GID ${DOCKER_GID})."
