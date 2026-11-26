@@ -1,0 +1,23 @@
+services:
+  cicd:
+    image: ghcr.io/globalinitiatives/cicd-runners:${CICD_IMAGE_TAG}
+    hostname: cicd-environment
+    restart: unless-stopped
+    init: true
+    working_dir: /opt/cicd
+
+    # Grants access to the host Docker socket for trusted runner scripts.
+    group_add:
+      - "${DOCKER_GID}"
+
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - cicd-data:/opt/cicd
+
+volumes:
+  cicd-data:
