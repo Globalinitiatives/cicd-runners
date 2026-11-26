@@ -1,0 +1,38 @@
+name: Validate runner image
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    env:
+      DOCKER_GID: 999
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Compose rendering
+        run: docker compose config --quiet
+      - name: Build image
+        run: docker build --build-arg DOCKER_GID="$DOCKER_GID" -f dockerfile -t cicd-runners:test .
+      - name: Start Supervisor
+        run: docker run -d --name cicd-runners-test --group-add "$DOCKER_GID" --cap-drop ALL --security-opt no-new-privileges cicd-runners:test
+      - name: Register a runner
+        run: |
+          docker exec cicd-runners-test bash -lc '
+            mkdir -p /opt/cicd/smoke
+            printf "#!/usr/bin/env bash\\nwhile true; do sleep 1; done\\n" > /opt/cicd/smoke/run.sh
+            chmod +x /opt/cicd/smoke/run.sh
+            add-runner smoke
+            sleep 11
+            supervisorctl -c /etc/cicd/supervisord.conf status smoke | grep RUNNING
+          '
+      - name: Show logs on failure
+        if: failure()
+        run: docker logs cicd-runners-test
+      - name: Remove test container
+        if: always()
+        run: docker rm -f cicd-runners-test
