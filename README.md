@@ -28,6 +28,15 @@ docker compose ps
 
 `docker-compose.yml` builds `dockerfile`, creates the matching socket group in the image, and adds that numeric group to the running process. The only persistent path is `/opt/cicd`; Supervisor's immutable configuration stays in `/etc/cicd`, so it remains available across volume reuse and image upgrades.
 
+## Deploy with Portainer
+
+For a Portainer **standalone Docker** environment, create a new Stack and paste the contents of `portainer-stack.yml` into the Web editor. In the Stack's environment-variable section, enter the values from `stack.env.example` manually:
+
+- `DOCKER_GID`: the numeric owner group of `/var/run/docker.sock` on the Docker host. Run `stat -c '%g' /var/run/docker.sock` on Linux to obtain it.
+- `CICD_IMAGE_TAG`: `latest` tracks images published from `release`; use a `sha-...` tag to pin a deployment.
+
+The stack pulls `ghcr.io/globalinitiatives/cicd-runners` and persists runner data in the `cicd-data` volume. If the GHCR package is private, configure Portainer's GitHub Container Registry credentials before deploying.
+
 ## Register a runner
 
 Create a long-running script in the named volume, then register it:
